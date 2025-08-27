@@ -1,0 +1,7 @@
+10- eu tenho seu número de telefone, não tenho?
+3- você não esteve na australia, esteve?
+5- não há uma biblioteca perto daqui, há?
+
+10- I have your phone number, don't I?
+3- you haven't been to australia, have you?
+5- there isn't a library near here, is there?

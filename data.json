@@ -1,0 +1,31 @@
+{
+  "fila": [
+    {
+      "pt": "eu tenho seu número de telefone, não tenho?",
+      "en": "I have your phone number, don't I?"
+    },
+    {
+      "pt": "você não esteve na australia, esteve?",
+      "en": "you haven't been to australia, have you?"
+    },
+    {
+      "pt": "não há uma biblioteca perto daqui, há?",
+      "en": "there isn't a library near here, is there?"
+    },
+    {
+      "pt": "eu tenho seu número de telefone, não tenho?",
+      "en": "I have your phone number, don't I?"
+    },
+    {
+      "pt": "você não esteve na australia, esteve?",
+      "en": "you haven't been to australia, have you?"
+    },
+    {
+      "pt": "não há uma biblioteca perto daqui, há?",
+      "en": "there isn't a library near here, is there?"
+    }
+  ],
+  "revisadas_hoje": 3,
+  "meta_diaria": 3,
+  "ultima_data": "2025-08-27"
+}

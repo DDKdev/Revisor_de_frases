@@ -1,0 +1,2 @@
+- aumentar percentual de proximidade
+- listar frases que ainda estão na lista
