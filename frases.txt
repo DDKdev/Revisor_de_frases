@@ -1,7 +1,7 @@
-10- eu tenho seu número de telefone, não tenho?
-3- você não esteve na australia, esteve?
-5- não há uma biblioteca perto daqui, há?
+10- ela tem jogado em uma equipe ou sozinha?
+4- a loja não abriu ainda, abriu?
+9- para ser sincera, eu ainda não acordei completamente
 
-10- I have your phone number, don't I?
-3- you haven't been to australia, have you?
-5- there isn't a library near here, is there?
+10- has she been playing on a team or by herself?
+4- the store hasn't opened yet, has it?
+9- to be honest, I haven't woken up completely yet

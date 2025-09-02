@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import ttk
 from utils import (
     importar_frases_txt,
     atualizar_fila_com_novas,
@@ -7,22 +8,20 @@ from utils import (
     salvar_dados,
     processar_resposta,
     zerar_fila,
-    exportar_fila_para_txt
-
+    exportar_fila_para_txt,
+    excluir_frase_atual
 )
 
 CAMINHO_JSON = "data.json"
 CAMINHO_TXT = "frases.txt"
 
-# Carrega os dados iniciais
 dados = carregar_dados(CAMINHO_JSON)
 
-# Funções da interface
 def importar_frases():
+    global dados
     try:
         novas = importar_frases_txt(CAMINHO_TXT)
         atualizar_fila_com_novas(novas, CAMINHO_JSON)
-        global dados
         dados = carregar_dados(CAMINHO_JSON)
         atualizar_interface()
         messagebox.showinfo("Importação", f"{len(novas)} frases importadas com sucesso.")
@@ -30,6 +29,7 @@ def importar_frases():
         messagebox.showerror("Erro ao importar", str(e))
 
 def verificar():
+    global dados
     resposta = entrada.get().strip()
     if not resposta:
         return
@@ -41,30 +41,67 @@ def verificar():
 
     if correta_bool:
         resultado["text"] = f"✅ Correta! ({score:.1f}%)\n📌 Frase correta: {correta}"
+        btn_revisar_novamente.pack(pady=5)
+        btn_excluir_frase.pack_forget()
     else:
         resultado["text"] = f"❌ Errada! ({score:.1f}%)\n📌 Frase correta: {correta}"
+        btn_revisar_novamente.pack_forget()
+        btn_excluir_frase.pack(pady=5)
 
     entrada.delete(0, tk.END)
     atualizar_interface()
+
+def revisar_novamente():
+    global dados
+    if not dados["fila"]:
+        return
+    frase_atual = dados["fila"][0]
+    dados["fila"].append(frase_atual)
+    salvar_dados(dados, CAMINHO_JSON)
+    atualizar_interface()
+    btn_revisar_novamente.pack_forget()
+    btn_excluir_frase.pack_forget()
+    messagebox.showinfo("Revisão", "Frase devolvida à fila para revisão futura.")
+
+def excluir_frase():
+    global dados
+    if not dados["fila"]:
+        return
+    excluir_frase_atual(dados, CAMINHO_JSON)
+    dados = carregar_dados(CAMINHO_JSON)
+    atualizar_interface()
+    resultado["text"] = ""
+    frase_digitada["text"] = ""
+    btn_revisar_novamente.pack_forget()
+    btn_excluir_frase.pack_forget()
+    messagebox.showinfo("Exclusão", "Frase removida da fila.")
 
 def atualizar_interface():
     if dados["fila"]:
         frase_pt["text"] = f"PT: {dados['fila'][0]['pt']}"
     else:
-        frase_pt["text"] = "🎉 Fila vazia!"
+        frase_pt["text"] = "🐝 A fila está vazia!"
 
     progresso["text"] = f"Revisadas hoje: {dados['revisadas_hoje']} / Meta: {dados['meta_diaria']}"
     total_fila["text"] = f"Frases na fila: {len(dados['fila'])}"
 
+    if dados["meta_diaria"] > 0:
+        percentual = int((dados["revisadas_hoje"] / dados["meta_diaria"]) * 100)
+        barra_progresso["value"] = percentual
+    else:
+        barra_progresso["value"] = 0
+
 def confirmar_zerar():
+    global dados
     resposta = messagebox.askyesno("Zerar Fila", "Tem certeza que deseja apagar todas as frases?")
     if resposta:
         zerar_fila(CAMINHO_JSON)
-        global dados
         dados = carregar_dados(CAMINHO_JSON)
         atualizar_interface()
         resultado["text"] = ""
         frase_digitada["text"] = ""
+        btn_revisar_novamente.pack_forget()
+        btn_excluir_frase.pack_forget()
         messagebox.showinfo("Fila zerada", "Todas as frases foram removidas.")
 
 def exportar_fila():
@@ -77,44 +114,49 @@ def exportar_fila():
 # Interface
 root = tk.Tk()
 root.title("Revisor de Inglês")
-root.geometry("600x450")
+root.geometry("640x560")
+root.configure(bg="#f0f4ff")
 
-frase_pt = tk.Label(root, text="", font=("Arial", 14), wraplength=550)
+style = ttk.Style()
+style.theme_use("clam")
+
+frame_main = ttk.Frame(root, padding=20)
+frame_main.pack()
+
+frase_pt = ttk.Label(frame_main, text="", font=("Arial", 14), wraplength=580)
 frase_pt.pack(pady=10)
 
-entrada = tk.Entry(root, font=("Arial", 14), width=50)
+entrada = ttk.Entry(frame_main, font=("Arial", 14), width=50)
 entrada.pack(pady=10)
 
-btn_verificar = tk.Button(root, text="Verificar", command=verificar)
-btn_verificar.pack(pady=5)
+btn_frame = ttk.Frame(frame_main)
+btn_frame.pack(pady=10)
 
-btn_importar = tk.Button(root, text="Importar Frases", command=importar_frases)
-btn_importar.pack(pady=5)
+ttk.Button(btn_frame, text="Verificar", command=verificar).pack(side="left", padx=5)
+ttk.Button(btn_frame, text="Importar Frases", command=importar_frases).pack(side="left", padx=5)
+ttk.Button(btn_frame, text="Zerar Fila", command=confirmar_zerar).pack(side="left", padx=5)
+ttk.Button(btn_frame, text="Exportar Fila", command=exportar_fila).pack(side="left", padx=5)
 
-btn_zerar = tk.Button(root, text="Zerar Fila", command=confirmar_zerar)
-btn_zerar.pack(pady=5)
-
-btn_exportar = tk.Button(root, text="Exportar Fila", command=exportar_fila)
-btn_exportar.pack(pady=5)
-
-frase_digitada = tk.Label(
-    root,
-    text="",
-    font=("Arial", 16, "italic"),
-    fg="#444466",
-    wraplength=550,
-    justify="left"
-)
+frase_digitada = ttk.Label(frame_main, text="", font=("Arial", 12, "italic"), foreground="#444466", wraplength=580)
 frase_digitada.pack(pady=5)
 
-resultado = tk.Label(root, text="", font=("Arial", 16), wraplength=550)
+resultado = ttk.Label(frame_main, text="", font=("Arial", 14), wraplength=580)
 resultado.pack(pady=10)
 
-progresso = tk.Label(root, text="", font=("Arial", 12))
+btn_revisar_novamente = ttk.Button(frame_main, text="Revisar novamente", command=revisar_novamente)
+btn_revisar_novamente.pack_forget()
+
+btn_excluir_frase = ttk.Button(frame_main, text="Excluir frase", command=excluir_frase)
+btn_excluir_frase.pack_forget()
+
+progresso = ttk.Label(frame_main, text="", font=("Arial", 12))
 progresso.pack()
 
-total_fila = tk.Label(root, text="", font=("Arial", 12))
+total_fila = ttk.Label(frame_main, text="", font=("Arial", 12))
 total_fila.pack()
+
+barra_progresso = ttk.Progressbar(frame_main, orient="horizontal", length=400, mode="determinate")
+barra_progresso.pack(pady=10)
 
 atualizar_interface()
 root.mainloop()

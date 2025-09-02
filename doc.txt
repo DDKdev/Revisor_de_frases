@@ -1,2 +1,26 @@
-- aumentar percentual de proximidade
-- listar frases que ainda estão na lista
+O que foi feito desde a versão do git:
+- aumento do percentual de proximidade para 90%
+- criação de uma nova interface
+- BOtão de devolver a fila mesmo atingindo aproximidade.
+- btn para excluir da lista mesmo se não atingir a proximidade mínima (em casos de palavras diferentes com mesmo significado)
+
+
+SUGESTÕES DE MELHORIAS:
+
+1. Evitar duplicatas na fila
+Evite que frases já existentes sejam adicionadas novamente ao importar:
+
+2. Rastreamento de desempenho por frase
+Adicione campos como erros, acertos, ultima_revisao em cada item da fila para permitir:
+- Repetição inteligente
+- Estatísticas por frase
+- Evolução do usuário
+
+3. Exportação com prefixos
+Se quiser manter os prefixos numéricos (ex: 10-), preserve-os na importação e exportação. Basta ajustar limpar_linha() para armazenar o prefixo como campo separado, ou não removê-lo.
+
+🔍 1. Correção gramatical com IA
+Você pode integrar uma API como LanguageTool para revisar frases e sugerir correções automáticas.
+
+🧹 4. Limpeza automática
+Implemente uma função que detecta frases com erros comuns (como “na alarm”) e sugira correções antes de importar.

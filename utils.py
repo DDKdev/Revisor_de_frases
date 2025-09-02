@@ -64,11 +64,14 @@ def atualizar_fila_com_novas(frases_novas, caminho_json):
         dados["revisadas_hoje"] = 0
         dados["ultima_data"] = hoje
 
-    dados["fila"].extend(frases_novas)
+    frases_existentes = {(f["pt"], f["en"]) for f in dados["fila"]}
+    novas_filtradas = [f for f in frases_novas if (f["pt"], f["en"]) not in frases_existentes]
+
+    dados["fila"].extend(novas_filtradas)
     salvar_dados(dados, caminho_json)
 
 # 🔹 Verifica se a resposta está correta com base na similaridade
-def verificar_resposta(correta, resposta_usuario, limite=85):
+def verificar_resposta(correta, resposta_usuario, limite=90):
     score = fuzz.ratio(correta.lower(), resposta_usuario.lower())
     return score >= limite, score
 
@@ -112,3 +115,9 @@ def exportar_fila_para_txt(dados, caminho_saida):
         f.write('\n')  # Linha em branco separadora
         for frase in frases_en:
             f.write(frase + '\n')
+
+# 🔹 Exclui a frase atual da fila
+def excluir_frase_atual(dados, caminho_json):
+    if dados["fila"]:
+        dados["fila"].pop(0)
+        salvar_dados(dados, caminho_json)
