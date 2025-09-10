@@ -4,6 +4,8 @@ import os
 from datetime import date
 from rapidfuzz import fuzz
 
+LIMITE_SIMILARIDADE = 90
+
 # 🔹 Limpa cada linha removendo espaços e prefixos como "1-"
 def limpar_linha(linha):
     linha = linha.strip()
@@ -36,17 +38,23 @@ def carregar_dados(caminho_json):
             "fila": [],
             "revisadas_hoje": 0,
             "meta_diaria": 0,
-            "ultima_data": ""
+            "ultima_data": "",
+            "acertos_hoje": 0
         }
     try:
         with open(caminho_json, 'r', encoding='utf-8') as f:
-            return json.load(f)
+            dados = json.load(f)
+            # Garante que o campo acertos_hoje exista
+            if "acertos_hoje" not in dados:
+                dados["acertos_hoje"] = 0
+            return dados
     except json.JSONDecodeError:
         return {
             "fila": [],
             "revisadas_hoje": 0,
             "meta_diaria": 0,
-            "ultima_data": ""
+            "ultima_data": "",
+            "acertos_hoje": 0
         }
 
 # 🔹 Salva os dados no JSON
@@ -60,23 +68,39 @@ def atualizar_fila_com_novas(frases_novas, caminho_json):
     hoje = str(date.today())
 
     if dados["ultima_data"] != hoje:
-        dados["meta_diaria"] = len(dados["fila"]) + len(frases_novas)
+        dados["meta_diaria"] = len(dados["fila"])
         dados["revisadas_hoje"] = 0
+        dados["acertos_hoje"] = 0
         dados["ultima_data"] = hoje
 
-    frases_existentes = {(f["pt"], f["en"]) for f in dados["fila"]}
-    novas_filtradas = [f for f in frases_novas if (f["pt"], f["en"]) not in frases_existentes]
+    # normaliza frases já na fila
+    frases_existentes = {
+        (f["pt"].strip().lower(), f["en"].strip().lower())
+        for f in dados["fila"]
+    }
+
+    novas_filtradas = []
+    duplicadas = 0
+    for f in frases_novas:
+        chave = (f["pt"].strip().lower(), f["en"].strip().lower())
+        if chave not in frases_existentes:
+            novas_filtradas.append(f)
+            frases_existentes.add(chave)
+        else:
+            duplicadas += 1
 
     dados["fila"].extend(novas_filtradas)
     salvar_dados(dados, caminho_json)
 
+    return len(novas_filtradas), duplicadas
+
 # 🔹 Verifica se a resposta está correta com base na similaridade
-def verificar_resposta(correta, resposta_usuario, limite=90):
+def verificar_resposta(correta, resposta_usuario, limite=LIMITE_SIMILARIDADE):
     score = fuzz.ratio(correta.lower(), resposta_usuario.lower())
     return score >= limite, score
 
 # 🔹 Processa a resposta e atualiza a fila
-def processar_resposta(dados, resposta_usuario, limite=85):
+def processar_resposta(dados, resposta_usuario, limite=LIMITE_SIMILARIDADE):
     if not dados["fila"]:
         return None, 0, "Fila vazia"
 
@@ -87,6 +111,7 @@ def processar_resposta(dados, resposta_usuario, limite=85):
 
     if correta_bool:
         dados["fila"].pop(0)
+        dados["acertos_hoje"] += 1
     else:
         dados["fila"].append(dados["fila"].pop(0))
 

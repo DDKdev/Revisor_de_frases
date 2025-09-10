@@ -1,15 +1,7 @@
 {
-  "fila": [
-    {
-      "pt": "para ser sincera, eu ainda não acordei completamente",
-      "en": "to be honest, I haven't woken up completely yet"
-    },
-    {
-      "pt": "a loja não abriu ainda, abriu?",
-      "en": "the store hasn't opened yet, has it?"
-    }
-  ],
-  "revisadas_hoje": 2,
+  "fila": [],
+  "revisadas_hoje": 0,
   "meta_diaria": 0,
-  "ultima_data": "2025-09-02"
+  "ultima_data": "2025-09-10",
+  "acertos_hoje": 0
 }

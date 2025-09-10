@@ -16,35 +16,50 @@ CAMINHO_JSON = "data.json"
 CAMINHO_TXT = "frases.txt"
 
 dados = carregar_dados(CAMINHO_JSON)
+if "acertos_hoje" not in dados:
+    dados["acertos_hoje"] = 0
+salvar_dados(dados, CAMINHO_JSON)
+
+frase_revisada = None  # Armazena a última frase correta para revisão futura
 
 def importar_frases():
     global dados
     try:
         novas = importar_frases_txt(CAMINHO_TXT)
-        atualizar_fila_com_novas(novas, CAMINHO_JSON)
+        inseridas, duplicadas = atualizar_fila_com_novas(novas, CAMINHO_JSON)
         dados = carregar_dados(CAMINHO_JSON)
+        salvar_dados(dados, CAMINHO_JSON)
         atualizar_interface()
-        messagebox.showinfo("Importação", f"{len(novas)} frases importadas com sucesso.")
+        messagebox.showinfo(
+            "Importação",
+            f"{inseridas} frases adicionadas.\n{duplicadas} duplicadas ignoradas."
+        )
     except Exception as e:
         messagebox.showerror("Erro ao importar", str(e))
 
 def verificar():
-    global dados
+    global dados, frase_revisada
     resposta = entrada.get().strip()
     if not resposta:
         return
 
     frase_digitada["text"] = f"Você digitou: {resposta}"
 
+    if dados["fila"]:
+        frase_revisada = dados["fila"][0]
+
     correta_bool, score, correta = processar_resposta(dados, resposta)
     salvar_dados(dados, CAMINHO_JSON)
 
     if correta_bool:
         resultado["text"] = f"✅ Correta! ({score:.1f}%)\n📌 Frase correta: {correta}"
+        resultado["foreground"] = "#228B22"
         btn_revisar_novamente.pack(pady=5)
         btn_excluir_frase.pack_forget()
     else:
+        frase_revisada = None
         resultado["text"] = f"❌ Errada! ({score:.1f}%)\n📌 Frase correta: {correta}"
+        resultado["foreground"] = "#B22222"
         btn_revisar_novamente.pack_forget()
         btn_excluir_frase.pack(pady=5)
 
@@ -52,25 +67,27 @@ def verificar():
     atualizar_interface()
 
 def revisar_novamente():
-    global dados
-    if not dados["fila"]:
-        return
-    frase_atual = dados["fila"][0]
-    dados["fila"].append(frase_atual)
-    salvar_dados(dados, CAMINHO_JSON)
-    atualizar_interface()
-    btn_revisar_novamente.pack_forget()
-    btn_excluir_frase.pack_forget()
-    messagebox.showinfo("Revisão", "Frase devolvida à fila para revisão futura.")
+    global dados, frase_revisada
+    if frase_revisada:
+        dados["fila"].append(frase_revisada)
+        salvar_dados(dados, CAMINHO_JSON)
+        atualizar_interface()
+        btn_revisar_novamente.pack_forget()
+        btn_excluir_frase.pack_forget()
+        messagebox.showinfo("Revisão", "Frase devolvida à fila para revisão futura.")
+        frase_revisada = None
 
 def excluir_frase():
-    global dados
+    global dados, frase_revisada
     if not dados["fila"]:
         return
     excluir_frase_atual(dados, CAMINHO_JSON)
+    frase_revisada = None
     dados = carregar_dados(CAMINHO_JSON)
+    salvar_dados(dados, CAMINHO_JSON)
     atualizar_interface()
     resultado["text"] = ""
+    resultado["foreground"] = "#000000"
     frase_digitada["text"] = ""
     btn_revisar_novamente.pack_forget()
     btn_excluir_frase.pack_forget()
@@ -91,14 +108,26 @@ def atualizar_interface():
     else:
         barra_progresso["value"] = 0
 
+    total_revisadas = dados["revisadas_hoje"]
+    acertos = dados.get("acertos_hoje", 0)
+
+    if total_revisadas > 0:
+        taxa = (acertos / total_revisadas) * 100
+        taxa_acertos["text"] = f"Taxa de acertos do dia: {taxa:.1f}% ({acertos} acertos)"
+    else:
+        taxa_acertos["text"] = "Taxa de acertos do dia: —"
+
 def confirmar_zerar():
-    global dados
+    global dados, frase_revisada
     resposta = messagebox.askyesno("Zerar Fila", "Tem certeza que deseja apagar todas as frases?")
     if resposta:
         zerar_fila(CAMINHO_JSON)
         dados = carregar_dados(CAMINHO_JSON)
+        frase_revisada = None
+        salvar_dados(dados, CAMINHO_JSON)
         atualizar_interface()
         resultado["text"] = ""
+        resultado["foreground"] = "#000000"
         frase_digitada["text"] = ""
         btn_revisar_novamente.pack_forget()
         btn_excluir_frase.pack_forget()
@@ -114,7 +143,7 @@ def exportar_fila():
 # Interface
 root = tk.Tk()
 root.title("Revisor de Inglês")
-root.geometry("640x560")
+root.geometry("640x600")
 root.configure(bg="#f0f4ff")
 
 style = ttk.Style()
@@ -128,6 +157,7 @@ frase_pt.pack(pady=10)
 
 entrada = ttk.Entry(frame_main, font=("Arial", 14), width=50)
 entrada.pack(pady=10)
+entrada.bind("<Return>", lambda event: verificar())
 
 btn_frame = ttk.Frame(frame_main)
 btn_frame.pack(pady=10)
@@ -157,6 +187,9 @@ total_fila.pack()
 
 barra_progresso = ttk.Progressbar(frame_main, orient="horizontal", length=400, mode="determinate")
 barra_progresso.pack(pady=10)
+
+taxa_acertos = ttk.Label(frame_main, text="", font=("Arial", 12))
+taxa_acertos.pack()
 
 atualizar_interface()
 root.mainloop()
