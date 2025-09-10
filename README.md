@@ -31,7 +31,6 @@ python Main.py
 - Biblioteca rapidfuzz
 - Sistema operacional com suporte a tkinter (Windows, Linux, macOS)
 
-Claro, Daniel! Aqui está o conteúdo completo do README em formato Markdown (README.md) para você copiar e colar diretamente no seu projeto:
 # 📝 Revisor de Inglês — Aplicativo Desktop para Treino de Tradução
 
 Uma aplicação simples e eficaz para praticar frases em inglês com base em traduções do português. Ideal para quem quer melhorar a fluência e revisar construções gramaticais com feedback instantâneo.
